@@ -1,0 +1,783 @@
+<!DOCTYPE html>
+<html lang="zh-TW">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>「Frank_notebooklm」提示詞資料庫 V2.2 (影音強化版)</title>
+<script src="https://cdn.tailwindcss.com"></script>
+<script src="https://unpkg.com/lucide@latest"></script>
+<style>
+    .scrollbar-thin::-webkit-scrollbar { width: 6px; height: 6px; }
+    .scrollbar-thin::-webkit-scrollbar-track { background: transparent; }
+    .scrollbar-thin::-webkit-scrollbar-thumb { background: #e2e8f0; border-radius: 10px; }
+    .dark-scrollbar::-webkit-scrollbar-thumb { background: #334155; }
+    #resizer:hover { background-color: #818cf8; }
+
+    .selection-btn {
+        font-weight: 800 !important; 
+        color: #1e293b !important;
+        transition: all 0.2s ease;
+        word-break: break-word;hyphens: auto;
+        line-height: 1.2;
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        justify-content: center;
+        text-align: center;
+    }
+
+    .selection-btn.active {
+        border-color: #4f46e5 !important;
+        background-color: #f5f3ff !important;
+        color: #4338ca !important;
+        font-weight: 900 !important;
+        box-shadow: inset 0 2px 4px 0 rgba(0, 0, 0, 0.06);
+        transform: translateY(1px);
+    }
+
+    .dropdown-content {
+        max-height: 0;
+        overflow: hidden;
+        transition: max-height 0.3s ease-out;
+        position: relative;
+        z-index: 10;
+    }
+
+    .dropdown-content.show {
+        max-height: 2500px; 
+        transition: max-height 0.6s ease-in;
+    }
+
+    .chevron-icon {
+        transition: transform 0.3s ease;
+    }
+
+    .rotate-180 {
+        transform: rotate(180deg);
+    }
+
+    .label-clr-0 { background-color: #eef2ff; color: #4338ca !important; border-left: 4px solid #4338ca; }
+    .label-clr-1 { background-color: #ecfdf5; color: #059669 !important; border-left: 4px solid #059669; }
+    .label-clr-2 { background-color: #fffbeb; color: #d97706 !important; border-left: 4px solid #d97706; }
+    .label-clr-3 { background-color: #fff1f2; color: #e11d48 !important; border-left: 4px solid #e11d48; }
+    .label-clr-4 { background-color: #faf5ff; color: #9333ea !important; border-left: 4px solid #9333ea; }
+
+    .btn-clr-0 { background-color: #f8fafc; }
+    .btn-clr-1 { background-color: #f0f9ff; }
+    .btn-clr-2 { background-color: #f0fdf4; }
+    .btn-clr-3 { background-color: #fefce8; }
+</style>
+</head>
+<body class="h-screen bg-slate-100 flex flex-col font-sans text-slate-900 overflow-hidden">
+
+<header class="shrink-0 p-3 border-b border-slate-200 bg-white z-20 shadow-sm">
+    <div class="max-w-full mx-auto flex items-center justify-between">
+        <h1 class="text-lg font-black text-slate-800 flex items-center gap-2">
+            <span class="bg-indigo-600 text-white px-1.5 py-0.5 rounded text-xs tracking-tighter shadow-sm">P.L.</span>
+            「Frank_notebooklm」提示詞資料庫<span class="text-[10px] text-slate-400 font-normal uppercase">V2.2</span>
+        </h1>
+        <div class="flex items-center gap-2">
+            <button id="reset-all-btn" class="text-[10px] font-bold text-red-500 hover:text-red-700 border border-red-100 bg-red-50 px-3 py-1 rounded transition-all active:scale-95 uppercase tracking-tighter flex items-center gap-1">
+                <i data-lucide="x-circle" class="w-3 h-3"></i> 全部清除
+            </button>
+        </div>
+    </div>
+</header>
+
+<main class="flex-grow flex flex-nowrap overflow-hidden p-3 gap-0" id="container">
+    <div id="left-panel" class="h-full flex flex-col shrink-0 overflow-hidden border border-slate-200 rounded-l-lg bg-white shadow-sm" style="flex-basis: 60%;">
+        <div class="flex-grow overflow-y-auto overflow-x-hidden p-4 scrollbar-thin">
+            <div class="w-full" id="config-sections">
+                <div class="mb-4 p-3 label-clr-0 rounded-r-lg border border-indigo-100">
+                    <h3 class="text-[10px] font-black uppercase tracking-tight mb-2 flex items-center gap-2">
+                        <i data-lucide="sparkles" class="w-3.5 h-3.5"></i> AI投影片風格分析
+                    </h3>
+                    <div class="flex items-center gap-3">
+                        <label class="flex-1 cursor-pointer flex items-center justify-center gap-2 border-2 border-dashed border-indigo-300 bg-white rounded-md p-2 hover:border-indigo-500 transition-all">
+                            <input type="file" id="file-input" class="hidden" accept="image/*,.pdf">
+                            <div id="file-display" class="flex items-center gap-2 text-indigo-500">
+                                <i data-lucide="upload" class="w-4 h-4"></i>
+                                <span class="text-[10px] font-bold">上傳 PDF 或圖片檔案</span>
+                            </div>
+                        </label>
+                        <div class="flex flex-col gap-1 w-32 shrink-0">
+                            <button id="analyze-detailed" class="px-3 py-1.5 rounded-md text-[10px] font-bold bg-white/50 border border-indigo-200 text-slate-400" disabled>深度分析風格</button>
+                            <button id="analyze-concise" class="px-3 py-1.5 rounded-md text-[10px] font-bold bg-white/50 border border-indigo-200 text-slate-400" disabled>精簡分析核心</button>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="mb-3 p-3 label-clr-1 rounded-r-lg border border-emerald-100">
+                    <h3 class="text-[10px] font-black uppercase mb-1 leading-none">0. 封面標題</h3>
+                    <input type="text" id="title-input" placeholder="輸入主題..." class="w-full px-2 py-1.5 rounded border border-emerald-200 bg-white text-[10px] font-bold outline-none shadow-inner focus:ring-1 focus:ring-emerald-400 transition-all">
+                </div>
+
+                <div class="mb-4">
+                    <button id="clear-selections-btn" class="w-full text-[10px] font-bold bg-slate-800 hover:bg-black text-white py-2 rounded shadow-sm uppercase tracking-wider transition-colors">一鍵取消所有選取</button>
+                </div>
+
+                <div id="selection-groups-container" class="space-y-2"></div>
+
+                <div class="mt-6 pt-4 border-t-2 border-slate-100">
+                    <h3 class="text-[11px] font-black text-purple-700 uppercase mb-2 italic flex items-center gap-1">
+                        <i data-lucide="edit-3" class="w-3 h-3"></i> 12. 其他自訂備註 (AI 分析結果填入處)
+                    </h3>
+                    <textarea id="custom-notes-input" placeholder="在此輸入額外細節要求..." class="w-full h-32 p-3 rounded-lg border-2 border-purple-500 bg-purple-50/30 text-[10px] outline-none resize-none shadow-md shadow-purple-100 focus:bg-white focus:ring-2 focus:ring-purple-600 transition-all font-bold text-slate-800 placeholder:text-purple-300"></textarea>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div id="resizer" class="w-1.5 h-full cursor-col-resize transition-colors flex items-center justify-center bg-slate-200 group">
+        <div class="w-[1px] h-16 bg-slate-400 group-hover:bg-white rounded-full"></div>
+    </div>
+
+    <div id="right-panel" class="h-full flex-1 min-w-0 flex flex-col border border-slate-800 rounded-r-lg shadow-xl bg-slate-900">
+        <div class="px-3 py-1.5 bg-slate-800 flex justify-between items-center border-b border-slate-700 shrink-0">
+            <span class="text-[10px] text-slate-400 font-mono tracking-widest uppercase">Prompt Output</span>
+            <button id="copy-btn" class="text-[10px] font-bold bg-indigo-600 hover:bg-indigo-500 text-white px-3 py-1 rounded transition-all active:scale-95 shadow-md uppercase">Copy</button>
+        </div>
+        <div class="p-4 overflow-y-auto flex-grow font-mono text-[11px] text-indigo-100/90 leading-tight scrollbar-thin dark-scrollbar">
+            <pre id="prompt-output" class="whitespace-pre-wrap"></pre>
+        </div>
+    </div>
+</main>
+
+<script type="module">
+import { initializeApp } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-app.js";
+import { getAuth, signInAnonymously, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-auth.js";
+import { getFirestore, doc, setDoc, getDoc } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-firestore.js";
+
+const INITIAL_CONFIG = {
+    types: [
+        { id: 't1', label: '流量企劃', prompt: '你是一位百萬影音大師。請規劃一份針對熱門趨勢、具備高留存率與爆發力的影片策略，明確標註吸引點。' },
+        { id: 't2', label: '簡報製作', prompt: '作為頂級顧問，設計一份邏輯嚴密、結構清晰的簡報大綱。要求風格洗鍊，能滿足決策展示需求。' },
+        { id: 't3', label: '影音腳本', prompt: '以資深編劇身份，撰寫節奏感強、運鏡描述明確的影音腳本，適用各類創作，讓畫面感躍然紙上。' },
+        { id: 't4', label: '商業／行銷企劃', prompt: '作為行銷經理，撰寫一份具可行性與市場洞察的企劃。包含目標設定與執行細節，適用於專案提案。' },
+        { id: 't5', label: '教學簡報', prompt: '你是教學專家。設計一套循序漸進、針對學習目標的教學大綱。風格親切易懂，協助受眾高效吸收。' },
+        { id: 't6', label: '社群貼文', prompt: '擔任社群操盤手，規劃具備高互動潛力、風格獨特的貼文。針對平台語境，設計吸引點與行動指令。' },
+        { id: 't7', label: '產品文案', prompt: '你是頂尖文案人。設計一份強調賣點轉化、解決痛點的文案。風格需具說服力，適用於商務網頁。' },
+        { id: 't8', label: '懶人包', prompt: '以設計專家視角，規劃資訊高度濃縮、視覺引導強烈的懶人包架構。讓複雜主題能被受眾一眼看懂。' },
+        { id: 't9', label: '投資人簡報', prompt: '你是融資顧問。針對投資人需求，聚焦市場規模與商業壁壘規劃簡報。風格穩重權威，突顯競爭力。' },
+        { id: 't10', label: '報告型簡報', prompt: '擔任商業分析師，規劃一份數據導向、結論明確的報告型簡報。結構嚴謹，適用於企業內部季總結。' },
+        { id: 't11', label: '故事敘述型', prompt: '透過鮮活角色與情節發展呈現內容，強調情緒張力與衝突。適用於品牌感性行銷，引發受眾深度共鳴。' },
+        { id: 't12', label: '數據分析型', prompt: '結合具體數據與圖表進行深入分析，強調趨勢洞察與客觀結論。風格嚴謹理智，適用於專業研究報告。' },
+        { id: 't13', label: '品牌故事型', prompt: '詳細描述品牌起源與價值理念，建立情感連結與信任。風格溫潤有度，適用於官網或形象宣傳。' },
+        { id: 't14', label: '短影音腳本型', prompt: '設計節奏快速、具視覺衝擊的短影音腳本。包含黃金開場與結尾行動導引，適用於社群媒體爆款傳播。' },
+        { id: 't15', label: '長影片腳本型', prompt: '規劃結構完整的影片架構，包含詳細的情緒轉折與敘事層次。風格宏大深遠，適用於影音平台深度專題。' },
+        { id: 't16', label: '訪談對話型', prompt: '以一問一答方式呈現內容，模擬真實的訪談情境與對話節奏。風格自然流暢，適用於職涯分享或專家座談。' },
+        { id: 't17', label: '專欄評論型', prompt: '以專家角度對特定議題進行深度評論，提出獨到觀點與犀利分析。風格權威大氣，適用於各大媒體專欄。' },
+        { id: 't18', label: '日記反思型', prompt: '採用第一人稱記錄心路歷程，強調真實感受與內在成長。風格真摯動人，適用於個人品牌建立或札記。' },
+        { id: 't19', label: '雜誌報導型', prompt: '模仿雜誌特稿風格撰寫，兼具深度探索與優質可讀性。排版邏輯清晰，適用於產業人物專訪或風格報導。' },
+        { id: 't20', label: '創意發想型', prompt: '提出多元且突破框架的創新點子，強調靈感的發散與關聯性。風格跳脫常規，適用於腦力激盪與新提案。' },
+        { id: 't21', label: '問題解決型', prompt: '針對特定痛點提出具體解決方案，包含執行步驟與實務建議。風格務實直接，適用於客戶服務或指南。' },
+        { id: 't22', label: '流程規劃型', prompt: '清楚列出所有執行流程與節點步驟，確保邏輯連貫。風格條理分明，適用於專案管理與作業程序標準化。' },
+        { id: 't23', label: '比較分析型', prompt: '對多種選項進行全方位優缺點比較，幫助做出理性決策。風格中立客觀，適用於產品選型或策略評估。' },
+        { id: 't24', label: '靈感金句型', prompt: '生成簡短有力、具備辨識度的核心句子。風格精煉且富有哲理，適用於社群分享、海報設計或標語口號。' },
+        { id: 't25', label: '插畫描述型', prompt: '詳細描述畫面構圖、色彩氛圍與藝術風格，提供精確指引。適用於 AI 圖像生成或插畫創作的創意描述。' },
+        { id: 't26', label: '企劃提案型', prompt: '撰寫完整的企劃提案內容，涵蓋目標設定、核心策略與執行時程。風格專業正式，適用於對外合作投標。' },
+        { id: 't27', label: '知識整理型', prompt: '將龐雜資訊整理成條理化知識體系，方便記憶與理解。風格清晰架構化，適用於學習筆記或企業知識庫。' },
+        { id: 't28', label: '案例研究型', prompt: '分析實際成功案例內容，整理關鍵因素與經驗啟發。風格深入淺出，適用於商學院教材或產業競爭分析。' },
+        { id: 't29', label: '趨勢觀察型', prompt: '分析當前產業趨勢變化，提出未來的發展方向與前瞻洞察。風格具遠見性，適用於年度展望或趨勢專題。' },
+        { id: 't30', label: '情境模擬型', prompt: '設定具體的生活或工作情境進行推演，增加真實代入感。風格寫實靈活，適用於員工培訓或產品演示。' },
+        { id: 't31', label: '反轉觀點型', prompt: '從非傳統角度切入既有主題，提出顛覆性的見解與思考。風格新穎獨特，適用於觀點碰撞與爆款文案。' },
+        { id: 't32', label: '角色扮演型', prompt: '以特定角色的獨特視角進行創作，強化口吻個性。風格鮮明生動，適用於沉浸式文案、遊戲劇本或小說。' },
+        { id: 't33', label: '戰略白皮書型', prompt: '以權威視角剖析宏觀趨勢，提供落實建議。風格正式、嚴謹且權威，適用於政府政策或企業戰略白皮書。' },
+        { id: 't34', label: '思維願景型', prompt: '描繪未來的理想藍圖與價值體系，結合感性與理性的號召。風格鼓舞人心，適用於演講或願景發布。' },
+        { id: 't35', label: '實戰工具箱型', prompt: '將理論轉化為工具模板與操作清單，提供執行指南。風格實用精準，適用於工作坊或奈米級實踐教程。' }
+    ],
+    roles: [
+        { id: 'edit', label: '剪輯大師', prompt: '精通視聽語言與調色的後期專家，規劃流暢且具節奏感的影片剪輯與畫面層次。' },
+        { id: 'short', label: '短影音操盤', prompt: '擅長社群演算法與爆款內容，規劃高效的流量策略，精準提升影片的社群曝光度。' },
+        { id: 'marketer', label: '行銷策略師', prompt: '敏銳捕捉受眾痛點，規劃具說服力的行銷方案，在競爭市場中精準提升產品轉化率。' },
+        { id: 'vmedia5', label: '封面點擊大師', prompt: '視覺心理專家，設計重點標題突出且具吸引力的封面，極大化內容的點擊與轉化。' },
+        { id: 'storyteller', label: '說故事高手', prompt: '擅長將複雜概念轉化為動人敘事，運用感性風格與情節，為品牌建立深層情感連結。' },
+        { id: 'analyst', label: '數據分析師', prompt: '嚴謹的數據大師，從混亂資料中洞察產業趨勢，為商業決策提供精準客觀的專業報告。' },
+        { id: 'youtuber', label: '內容創作者', prompt: '知名影音創作者，製作具備高互動潛力的創意影音，規劃頻道的長期內容經營藍圖。' },
+        { id: 'vmedia7', label: '電影感調色師', prompt: '色彩藝術家，建立獨特顏色風格，賦予影視畫面具備大銀幕質感的視覺情緒色彩。' },
+        { id: 'designer', label: '設計師', prompt: '精通資訊圖表與視覺傳達，以專業美學風格美化內容，提升整體內容呈現的專業感。' },
+        { id: ' expert', label: '領域專家', prompt: '具備多年實戰經驗，以產業權威角度剖析市場動態，為特定領域提供深度的行動指引。' },
+        { id: 'script', label: '編劇總監', prompt: '擅長三幕劇結構，設計具備衝突張力與金句的劇本，適用於各類專業影音創作情境。' },
+        { id: 'teacher', label: '科普老師', prompt: '科普教學大師，用親切易懂語言拆解深奧知識，為零基礎受眾規劃循序漸進的課程。' },
+        { id: 'vmedia1', label: '燈光美學師', prompt: '電影級燈光設計師，利用光影營造敘事氛圍，針對不同拍攝場景優化畫面整體質感。' },
+        { id: 'pm', label: '產品經理', prompt: '產品舵手，平衡用戶需求與技術實作，制定清晰且具備可行性的產品發展路徑圖。' },
+        { id: 'auto', label: '自動化專家', prompt: '精通工作流自動化，串聯 AI 任務打造高效無縫的工作系統，大幅提升生產力。' },
+        { id: 'ux', label: 'UX研究員', prompt: '體驗心理學家，透過受眾行為研究優化介面可用性，打造以人為本的高品質數位產品。' },
+        { id: 'vmedia10', label: '影音投放策略', prompt: '廣告投放專家，制定精準的流量策略與測試方案，優化廣告表現並極大化投資回報。' },
+        { id: 'cyber', label: '資安專家', prompt: '數位 world 防禦大師，精通加密技術與安全架構規劃，守護數位資產免受外部威脅。' },
+        { id: 'consult', label: '轉型顧問', prompt: '數位轉型專家，診斷企業營運痛點並提供優化對策，推動組織在數位時代的升級。' },
+        { id: 'pr', label: '公關危機', prompt: '敏銳公關策略師，擅長塑造正面品牌形象並處理負面危機，全方位維護企業商譽。' },
+        { id: 'fin-adv', label: '投資顧問', prompt: '資深理財顧問，評估全球市場趨勢與風險，為客戶提供結構化的資產配置專業建議。' },
+        { id: 'quant', label: '量化交易', prompt: '金融數學大師，開發自動化交易策略與統計模型，在金融市場中尋求穩健獲利模式。' },
+        { id: 'vmedia3', label: '特效合成師', prompt: '頂尖視覺特效專家，將 3D 元素完美合成至畫面，打造具震撼力且無違和的影像。' },
+        { id: 'legal', label: '法律合規', prompt: '嚴謹法律專家，負責法規遵從審查與合約邏輯分析，控管企業營運中的各項風險。' },
+        { id: 'macro', label: '宏觀經濟', prompt: '敏銳經濟觀察家，剖析全球政策與趨勢影響，為企業長期發展提供宏大的戰略視角。' },
+        { id: 'negotiator', label: '談判專家', prompt: '心理博弈大師，運用專業溝通技巧與策略，在商務談判中為團隊達成最優合作協議。' },
+        { id: 'vmedia9', label: '字幕視覺工程', prompt: '字幕設計專家，打造具引導性的動態標題與排版，強化影音訊息在受眾心中的記憶。' },
+        { id: 'supply', label: '供應鏈專家', prompt: '物流優化大師，精通國際貿易與運籌管理架構，全方位提升全球供應鏈的運作效率。' },
+        { id: 'architect', label: '全端架構', prompt: '資深系統架構師，設計模組化且高穩定的底層架構，支撐各類大型數位專案開發。' },
+        { id: 'prompt', label: '提示詞架構', prompt: '指令工程專家，精通 LLM 底層邏輯與提示詞優化，提升 AI 輸出的內容品質。' },
+        { id: 'vmedia2', label: '直播導播', prompt: '資深導播，精通多機位調度與即時互動節奏掌控，確保直播過程擁有極佳視覺體驗。' },
+        { id: 'strat-cons', label: '策略顧問', prompt: '商業邏輯大師，擅長結構化思維與商業問題拆解，為企業提供深度的戰略諮詢方案。' },
+        { id: ' pitch-exp', label: '提案專家', prompt: '溝通大師，精準抓住受眾痛點並提出具強說服力方案，提升簡報競標的勝出機率。' },
+        { id: 'acad-prof', label: '學術教授', prompt: '知識拆解專家，將複雜理論轉化為易吸收教學體系，引導受眾進行深度專題研究。' },
+        { id: 'vmedia4', label: '音效設計師', prompt: '影視配樂大師，利用 Foley 擬音強化情緒渲染，大幅提升影音內容的聽覺沉浸感。' },
+        { id: ' psych-exp', label: '心理學家', prompt: '受眾心理專家，分析認知偏誤與情感觸點，在內容創作中實現深度的受眾心靈共鳴。' },
+        { id: ' tech-guru', label: '技術專家', prompt: '技術底層導師，精確描述系統架構與技術原理，為產品撰寫權威感的專業技術手冊。' },
+        { id: ' mkt-insight', label: '市場洞察師', prompt: '定位大師，分析消費者行為與市場切入點，為品牌規劃具備差異化的市場競爭策略。' },
+        { id: 'vmedia6', label: '動態圖形師', prompt: '設計專家，將抽象數據轉化為流暢的 MG 動畫，大幅提升知識型影音的呈現層次。' },
+        { id: ' biz-analyst', label: '商業分析師', prompt: '建模專家，評估獲利模式與產業動態趨勢，為企業產出具備深度洞察的分析報告。' },
+        { id: ' role32', label: '職涯戰略師', prompt: '專業職涯顧問，挖掘個人核心優勢並提供面試戰略建議，協助人才實現職涯突破。' },
+        { id: 'vmedia8', label: '影音資採專家', prompt: '專業採編，從龐大庫存中篩選最具敘事張力的片段，並進行版權合規分析與構建。' },
+        { id: ' role33', label: '用戶增長駭客', prompt: '數據驅動專家，專注優化用戶獲取漏斗 (AARRR)，推動產品用戶數爆發增長。' },
+        { id: ' role34', label: '高階領導教練', prompt: '管理顧問，為企業高層提供決策權衡與領導力建議，優化組織的決策與管理效能。' },
+        { id: ' role35', label: '知識工程師', prompt: '資訊結構化專家，將龐雜資料轉化為可視化知識地圖，建立系統化企業知識庫。' },
+        { id: ' role36', label: '營運架構師', prompt: '流程優化專家，擅長建立 SOP 與自動化運作系統，提升組織營運的標準化程度。' },
+        { id: ' role37', label: '情境體驗設計師', prompt: '體驗心理專家，設計沉浸式情境與用戶情緒轉折，優化用戶服務流程的感知價值。' },
+        { id: ' role38', label: '品牌文字師', prompt: '文字煉金術士，定調品牌獨特視覺語感並創作文案，塑造深刻的品牌文化價值。' },
+        { id: ' role39', label: '批判性思考者', prompt: '理性辯證家，剖析論證背後的邏輯謬誤與認知偏見，在複雜議題中尋求真實見解。' },
+        { id: ' role40', label: '全域行銷長', prompt: '宏觀行銷領袖，整合多元資源規劃全方位行銷攻堅策略，提升品牌長期影響力。' }
+    ],
+    structures: [
+        { id: 's1', label: 'SCQA', prompt: '運用「情境-衝突-問題-回答」模式，在開場建立共鳴並引出矛盾，隨後提供精準解決方案，適合用於具備敘事感的商務提案或產品介紹。' },
+        { id: 's2', label: '金字塔', prompt: '採取「結論先行」原則，由上而下進行邏輯拆解與證據支撐，確保高階決策者能瞬時掌握重點，適用於嚴謹的專業報告。' },
+        { id: 's3', label: 'FAB', prompt: '透過描述產品屬性、轉化競爭優勢並對接用戶最終利益，將技術語言轉譯為感性價值，適合用於行銷文案或業務銷售，強力驅動購買慾望。' },
+        { id: 's4', label: 'AIDA', prompt: '遵循注意、興趣、慾望、行動的漏斗路徑，逐步引導受眾情緒並最終觸發轉化，是設計廣告文案或導購頁面的黃金法則，能有效提升點擊與成交。' },
+        { id: 's5', label: 'PASTOR', prompt: '從鎖定問題、放大痛點、提供解方到見證成果，最後呼籲行動，以救贖者姿態建立深度信任，適用於高價產品銷售或深度的行銷長信。' },
+        { id: 's6', label: '黃金圈', prompt: '從 Why 核心動機出發，延伸至 How 執行方法與 What 最終成果，強調品牌價值與信念，適合用於建立品牌忠誠度或激勵人心的願景演說。' },
+        { id: 's7', label: '問題解決', prompt: '採「痛點分析-對策提出-預期效益」三段式編排，針對具體難題提供落地指引，風格務實且具執行力，適用於客戶服務手冊或內部流程優化建議。' },
+        { id: 's8', label: '決策樹權衡', prompt: '採分支路徑架構，詳細列出不同決策節點的投入回報比與風險預估，以數據化視角輔助理性權衡，適用於複雜的商業策略評估或投資分析。' },
+        { id: 's9', label: '心理誘因', prompt: '結合行為經濟學原理，在內容佈局中置入稀缺性、社會認同與對比效應，微妙引導受眾潛意識決策，適合用於短時促銷活動或高轉化率頁面設計。' },
+        { id: 's10', label: '模組系統', prompt: '將核心知識拆解為標準化功能模組，透過組裝式邏輯呈現各組件關聯，提升內容重用性與擴充感，適用於軟體架構說明或大型專案系統規劃。' },
+        { id: 's11', label: 'SWOT 戰略分析', prompt: '透過優勢、劣勢、機會與威脅四維度評估，全面剖析企業現狀與外部環境，產出具備競爭力的對策，適用於年度策略規劃或新市場切入點分析。' },
+        { id: 's12', label: 'MECE 窮盡分類', prompt: '遵循「相互獨立、完全窮盡」原則，將複雜議題結構化，確保邏輯無漏洞且不重疊，適用於管理顧問的診斷報告或系統化的知識百科整理。' },
+        { id: 's13', label: '第一性原理', prompt: '回歸事物最基礎的真理進行推導，剝離類比與過往經驗的束縛，重構核心邏輯以達成顛覆式創新，適用於產品研發或技術突破的底層邏輯論證。' },
+        { id: 's14', label: 'PREP 強力溝通', prompt: '採用「點出觀點-給予理由-實證案例-重申立場」的循環，在短時間內建立強大說服力，適合用於即興演講、會議發言或職場高效溝通情境。' },
+        { id: 's15', label: '5W1H 全維拆解', prompt: '從人、事、時、地、物、為何及如何七大維度，全方位還原事件真相或任務全貌，確保資訊傳遞零死角，適用於新聞報導、事故調查或專案啟動。' },
+        { id: 's16', label: '80/20 價值聚焦', prompt: '識別並聚焦於 20% 的關鍵驅動因素，優化資源配置以極大化產出效益，風格專注且高效，適用於績效考核、時間管理或核心業務優化策略。' },
+        { id: 's17', label: 'PESTEL 宏觀分析', prompt: '從政治、經濟、社會、技術、環境及法律六大面向，剖析產業大環境的潛在影響，建立長遠戰略視角，適用於跨國市場調研或宏觀趨勢預測。' },
+        { id: 's18', label: 'OKR 目標檢核', prompt: '以具備野心的願景目標為核心，掛鉤具體且可衡量的關鍵結果，強調進度追蹤與靈活修正，適用於團隊敏捷開發、創業增長與個人目標達成管理。' },
+        { id: 's19', label: '失敗預判演練', prompt: '假設專案已經失敗，從終點倒推可能的崩潰點與風險成因，並制定預防性防範措施，適用於高風險決策前的極端壓力測試與危機應變規劃。' },
+        { id: 's20', label: '關鍵路徑管理', prompt: '識別任務序列中最核心的連續路徑，精確掌控時程進度與資源瓶頸，確保專案如期完工，適用於工程建設、大型活動執行或複雜的產品開發管理。' },
+        { id: 's21', label: '需求層次驅動', prompt: '根據馬斯洛需求理論分析受眾內在動機，精準切換不同層次的溝通策略與價值主張，適合用於品牌定位、用戶心理洞察或高深度的內容行銷。' },
+        { id: 's22', label: 'PDCA 持續迭代', prompt: '遵循「計畫-執行-查核-行動」循環邏輯，建立自我優化與反饋機制，確保流程不斷進化，適用於品質管理、技術維運或個人習慣的持續改進。' },
+        { id: 's23', label: '逆向工程推演', prompt: '從最終理想目標出發，倒推所需的前置條件、資源與必經階段，釐進執行路徑的優先順序，適用於新產品開發、策略破局或職涯發展規劃。' },
+        { id: 's24', label: '利益關係人矩陣', prompt: '依據影響力與權力對相關方進行分類，制定差異化的溝通與管理策略，化解阻力並爭取支持，適用於跨部門專案協作或大型社會倡議活動。' },
+        { id: 's25', label: '故事弧線邏輯', prompt: '採用「鋪陳-觸發-對抗-高潮-解決」的經典劇作結構，營造情緒張力與沉浸體驗，引發受眾深度共鳴，適用於品牌形象片、微電影或感性專題文案。' }
+    ],
+    infographics: [
+        { id: 'i1', label: '企業美學型', prompt: '運用深藍金漸層色調，配合精確幾何箭頭，在商業提案中展現專業深度與科技質感，大幅提升權威感與品牌信任，讓合作夥伴對實力留下深刻印象。' },
+        { id: 'i2', label: '數據視覺型', prompt: '透過多維度數據圖表與透明覆蓋層，將複雜資料轉化為直覺分析，於季度報告中提升專業感與含金量，協助決策者快速掌握市場動態趨勢與機會。' },
+        { id: 'i3', label: '極簡觀點型', prompt: '採用極致留白設計，側重單一核心關鍵字與精煉線條，於品牌發表會中建立強大視覺記憶點，引導觀眾進行深度思考並專注於核心品牌精神價值。' },
+        { id: 'i4', label: '卡片對比型', prompt: '使用多重矩形卡片佈局呈現並列資訊，在產品功能比較表中清晰呈現各項方案優劣，輔助決策層做出精準判斷並優化產品選購決策流程中的細節。' },
+        { id: 'i5', label: '邏輯流程型', prompt: '結合橫向時間軸導向與色彩分區，在專案進度匯報中明確標註執行步驟，強化團隊的工作節奏與任務協作效率，確保專案按計畫時程穩定推進。' },
+        { id: 'i6', label: '視覺震撼型', prompt: '以震撼的高畫質全螢幕圖片為基底，搭配高對比金句文案，在演講開場快速凝聚受眾專注力，營造沉浸式氛圍並激發聽眾對於主題的深度共鳴。' },
+        { id: 'i7', label: '社群互動型', prompt: '模擬社群媒體氣泡對話感與明快配色，於知識科普貼文中引發受眾情感共鳴，有效增加互動討論度與品牌黏著，建立具備活力的線上社群生態。' },
+        { id: 'i8', label: '破除迷思型', prompt: '採用左右強烈對比佈局與醒目錯誤修正標誌，清楚標註誤區與真相，在教育宣導中有效矯正舊觀念，幫助受眾建立正確科學知識與核心理解力。' },
+        { id: 'i9', label: '金字塔階層', prompt: '運用階層三角形視覺架構，從基礎層級逐層遞升，在組織架構介紹中展現嚴謹的邏輯關係與職責劃分細節，讓新手也能快速掌握各部門權責關係。' },
+        { id: 'i10', label: '韋恩圖交集', prompt: '利用半透明幾何體重疊區域，在市場定位分析中展現不同維度間的關聯性，精準鎖定核心競爭優勢與藍海切入點，為品牌找出獨特的市場立足點。' },
+        { id: 'i11', label: '數據儀表板', prompt: '模擬數位監控介面並內嵌趨勢折線圖，於年度業績回顧中展現數據驅動的決策過程，提升分析的深度與科技視覺感，讓數據成為最有力的證明。' },
+        { id: 'i12', label: '新聞雜誌型', prompt: '仿效雜誌封面設計巨大標題與兩欄導讀，在深度專題報導中營造權威感，大幅提升長篇內容的高可讀性與美學價值，適合用於品牌文化故事傳遞。' },
+        { id: 'i13', label: '路線圖成長', prompt: '運用蜿蜒進步曲線貫穿畫面，在個人職涯規劃中展示成長路徑，具體呈現各階段關鍵目標與成就，增加勵志感染力並勾勒出清晰的未來願景。' },
+        { id: 'i14', label: '漫畫格敘事', prompt: '切割為多個漫畫方格並配獨立對話框，在品牌故事傳遞中增加趣味性，透過連貫情節引發受眾共鳴，顯著降低複雜產品資訊的閱讀負擔與阻力。' },
+        { id: 'i15', label: '產品目錄型', prompt: '以網格式排列物件圖示並配精簡規格標籤，在電子商務展示頁面中協助客戶快速比較產品，提升轉化率與購買意願，並呈現出專業的產品陣容。' },
+        { id: 'i16', label: 'SWOT分析', prompt: '採取標準四象限佈局與平衡配色，在企業戰略評估中清晰界定優勢、劣勢、機會與威脅，提供客觀且具落地性的戰略決策依據與轉型發展建議。' },
+        { id: 'i17', label: '等距3D空間', prompt: '採用等距透視佈局與科技藍色調，在軟體系統架構圖中營造立體空間感，展現現代數位系統的層次質感與複雜度，讓底層架構一目了然且美觀。' },
+        { id: 'i18', label: '測驗互動型', prompt: '上方配置問題並預留隱藏答案區塊，在教育訓練簡報中增加互動趣味性，即時檢測受眾的學習成效與知識吸收率，有效提升整體課程參與熱度。' },
+        { id: 'i19', label: '藍圖設計稿', prompt: '使用深藍底色搭配白色細格線，在技術開發說明中呈現專業施工藍圖感，精確標註各項關鍵尺寸與性能指標細節，強調技術開發的專業嚴謹。' },
+        { id: 'i20', label: '評分矩陣型', prompt: '利用縱橫表格與色彩熱圖對比表現，在服務評估報告中直觀展現各項指標優劣，提供基於數據的改進建議與優化方向，為後續策略調整提供依據。' },
+        { id: 'i21', label: '心智分支圖', prompt: '將核心主題置於中央並向外發散分支，在創意發想會議中協助團隊梳理複雜邏輯，激發多元創新思維與點子關聯，大幅提升腦力激盪的品質。' },
+        { id: 'i22', label: '分類週期表', prompt: '仿照元素週期表方格堆疊佈局，在工具軟體分類指南中建立系統化索引，方便使用者快速查找資訊並掌握類別全貌，展現出高度整理術的美學。' },
+        { id: 'i23', label: '垂直長條型', prompt: '專為手機垂直閱讀設計頂部大型頭圖，在行動社群推播中提供流暢的瀏覽體驗，極大化資訊傳遞效率與點閱機率，適合資訊高度濃縮的快訊。' },
+        { id: 'i24', label: '標籤索引型', prompt: '邊緣模擬文件夾標籤索引美學，在多章節教學內容中強化整理術感，大幅提升內容結構的層次美感與檢視便利，展現出品牌的高質感內容組織。' },
+        { id: 'i25', label: '魚骨分析型', prompt: '核心問題位於魚頭並引出原因類別，在品質管制會議中深度探討問題根源，提出針對性的解決痛點策略與防範措施，確保產品良率與生產穩定。' },
+        { id: 'i26', label: '改造對比型', prompt: '畫面垂直分割展示痛點現狀與改善願景，在產品升級案例中建立強烈前後對比，強調解決方案的獨特價值與變革效果，直接驅動用戶升級意願。' },
+        { id: 'i27', label: '用戶旅程型', prompt: '横向呈現發現、評估與行動階段，在行銷策略規劃中完整描繪用戶體驗路徑，發掘關鍵轉化切入點與接觸點優化，為數位行銷提供清晰藍圖。' },
+        { id: 'i28', label: '雷達指標型', prompt: '多維度評估圖形位於中央展現綜合優劣，在人才能力測評中提供全方位的專業視覺分析，突顯發展潛力與核心職能，協助 HR 進行精準招募。' },
+        { id: 'i29', label: '歷史長卷型', prompt: '水平延伸的捲軸感設計展現時光厚度，在企業發展史回顧中完整記錄里程碑事件，營造宏大敘事感與歷史傳承價值，強化品牌形象的深度廣度。' },
+        { id: 'i30', label: 'PSR 框架型', prompt: '採用痛點、解方與成果三段式結構，在結案報告中量化展示執行效益，以實證數據說服投資人與決策層增加信心，呈現專業且具信服力的結案。' },
+        { id: 'i31', label: '構造解構型', prompt: '核心物件位於中央並引出零件放大圖，在產品硬體介紹中展現精細工業設計，突顯技術工藝細節與產品核心競爭力，滿足硬體發燒友的期待。' },
+        { id: 'i32', label: '拍立得相簿', prompt: '畫面佈滿隨意疊放的相片邊框感，在活動紀實分享中營造情感溫度，建立品牌與受眾間的親切連結與真實記憶感，適合用於年度回顧或社群分享。' },
+        { id: 'i33', label: '專業清單型', prompt: '垂直條列式行動清單配精緻複選框，在標準作業程序說明中提供清晰可執行的檢核表，確保任務完成度與操作安全性，有效減少人為作業誤差。' },
+        { id: 'i34', label: '費曼教學型', prompt: '左文右圖佈局並以大白話搭配極簡插圖，在科普知識傳播中大幅降低理解門檻，提升受眾的資訊吸收率與學習興趣，讓冷門知識變得生動易懂。' },
+        { id: 'i35', label: '排行榜單型', prompt: '利用巨大數字序號搭配強烈色塊背景，在熱門話題分析中建立鮮明等級層次感，強力吸引讀者目光並引發群聚效應，增加內容在社群的傳播熱度。' },
+        { id: 'i36', label: '巔峰對決型', prompt: '兩大對象在中央呈現對峙佈局與 VS 圖標，在競爭對手戰略分析中快速對比核心差異，提供極具深度的商業洞察評估，輔助行銷團隊制定攻勢。' },
+        { id: 'i37', label: '說明手冊型', prompt: '仿效實體說明書之線稿圖解與明確編號步驟，在硬體安裝指南中引導使用者完成操作，顯著減少售後問題與學習成本，提升品牌整體的服務感。' },
+        { id: 'i38', label: '循環回圈型', prompt: '以圓形環狀箭頭構成閉環邏輯，在 PDCA 管理循環中展示持續迭代流程，展現組織自我優化能力與流程管理的穩定，建立不斷進化的專業形象。' },
+        { id: 'i39', label: '熱力分佈型', prompt: '以世界地圖為背景並透過色彩濃度標註，在市場擴張報告中分析區域潛力，有效輔助全球戰略佈局與資源投放決策，展現宏觀的商業戰略視角。' },
+        { id: 'i40', label: '場景模擬型', prompt: '情境照為背景並配浮動視窗文字，在用戶痛點情境描述中增加真實代入感，引發受眾深層次共鳴並建立產品需求感，讓受眾身歷其境感受到解方。' },
+        { id: 'i41', label: '刊物通訊型', prompt: '帶有醒目刊頭與一體化長排版風格，在企業內部雙週報中系統化呈現資訊，提升內容的整體專業觀感與內部溝通效率，讓企業訊息傳遞更顯正式。' },
+        { id: 'i42', label: '極簡指引型', prompt: '採取條列式重點與直觀對比風格，在快速上手手冊中過濾冗餘資訊，強調核心邏輯，確保使用者能在最短時間內掌握操作重點並完成核心功能應用。' },
+        { id: 'i43', label: '行動導向型', prompt: '採取明確步驟引導與核心行動導向，在業務執行手冊中指示具體目標與方法，提升任務達成率並優化團隊的執行標準，讓每一項任務都有據可依。' },
+        { id: 'i44', label: '數據深研型', prompt: '採取數據驅動與資訊圖表化風格，在行業趨勢分析中挖掘隱藏洞察，提供嚴謹的決策依據，協助受眾掌握市場未來動向並建立專業權威的品牌力。' },
+        { id: 'i45', label: '情感敘事型', prompt: '採取故事化敘事與情感共鳴風格，在公益宣導活動中傳遞核心價值，激發受眾行動熱情，強化社會影響力與品牌形象，與受眾建立深厚心理連結。' },
+        { id: 'i46', label: '犀利反思型', prompt: '採取挑戰傳統與犀利反思風格，在思想領導力文章中質疑現狀，引發受眾深度思考，建立獨特且具權威性的專家觀點，展現領袖級別的思考廣度。' },
+        { id: 'i47', label: 'FAQ 快速對策', prompt: '採取問答式結構解決具體痛點，在客戶服務中心頁面中快速掃除疑慮，有效提升用戶滿意度並降低客服人員負擔，讓使用者疑難雜症得到速解。' },
+        { id: 'i48', label: '戰略診斷型', prompt: '以顧問視角剖析現狀並轉化為具體對策，在企業轉型規劃中提供專家建議，明確組織優化路徑，強化核心戰略競爭力，帶領組織跨越轉型鴻溝。' },
+        { id: 'i49', label: '沉浸故事型', prompt: '運用角色衝突建構內容並營造特定氛圍，在品牌微電影腳本中引領受眾進入情感場景，強化品牌故事的吸引力與情感連結，打造深刻的沉浸式體驗。' },
+        { id: 'i50', label: '深度指南型', prompt: '採取奈米級步驟化解說與實作細節，在專業技術課程中提供深度引導，確保學習成效，讓受眾能從理論跨越到實際操作，真正掌握技術的核心能力。' }
+    ],
+    visual_styles: [
+        { id: 'hand', label: '手繪塗鴉', prompt: '模擬手寫筆觸與粉筆質感，搭配牛皮紙背景，為個人筆記增加溫暖的人文溫度與親切感。' },
+        { id: 'high', label: '高調攝影', prompt: '運用明亮自然光與柔和長陰影效果，在產品展示中營造純淨、高端且充滿空氣感的視覺氛圍。' },
+        { id: 'min', label: '現代簡約', prompt: '採取極致留白與精密非襯線字體排版，在品牌發表會中突顯核心觀點，展現現代洗鍊美學。' },
+        { id: 'apple', label: '蘋果風格', prompt: '結合絲滑色彩漸層與擬真毛玻璃材質，在數位科技提案中呈現極致工藝感與流暢的體驗質感。' },
+        { id: 'dark', label: '深色商務', prompt: '採用墨黑或深海軍藍基底，點綴拉絲金屬邊框，於金融報告中建立穩重、專業且權威的形象。' },
+        { id: 'tech', label: '科技未來', prompt: '置入全息投影元件、動態螢光線條與數據流背景，在技術說明中營造虛擬現實與領先感。' },
+        { id: 'active', label: '創意活潑', prompt: '運用高飽和度撞色效果，搭配趣味感十足的幾何插圖，於社群行銷中激發受眾熱情與能量。' },
+        { id: 'acad', label: '學術專業', prompt: '採取嚴謹的雙欄對齊佈局與仿宋字體，於學術研討會中展現條理分明的邏輯與深厚專業感。' },
+        { id: 'retro', label: '復古懷舊', prompt: '使用泛黃報紙紋理與低飽和度顯影效果，在品牌歷史敘事中喚起受眾對黃金時代的經典記憶。' },
+        { id: 'glass', label: '磨砂玻璃', prompt: '運用多層次半透明效果與景深背景模糊，在 App 介面展示中營造輕盈、現代且具深度的質感。' },
+        { id: 'neu', label: '新擬態', prompt: '利用柔和的內外陰影，營造物件如同從背景中自然擠壓而出的浮雕感，增加介面的觸覺辨識。' },
+        { id: 'swiss', label: '瑞士網格', prompt: '遵循嚴密的數學網格結構，搭配大膽、鮮明的標題設計，在資訊圖表中提供極致的易讀性。' },
+        { id: 'cyber', label: '賽博龐克', prompt: '採取強烈霓虹色彩對比、數位雜訊與故障效果，在遊戲或前衛設計中營造反烏托邦未來感。' },
+        { id: 'bau', label: '包浩斯', prompt: '結合紅黃藍三原色與純粹幾何造型，強調功能主義與平衡感，適合用於建築或設計美學推廣。' },
+        { id: 'clay', label: '3D 黏土', prompt: '運用圓潤的倒角處理、霧面塑膠質感與溫暖立體光源，在角色設計中營造親切可愛的軟萌感。' },
+        { id: 'zen', label: '日式禪風', prompt: '大量留白搭配大地色調與宣紙紋理，於靜修或生活品牌中呈現平和、寂靜且純粹的自然美學。' },
+        { id: 'pop', label: '波普藝術', prompt: '採用大膽的圓點網點背景與高亮度對比色塊，在時尚宣傳中建立強烈的視覺衝擊與流行藝術感。' },
+        { id: 'brut', label: '粗獷主義', prompt: '使用未經修飾的粗獷字體與水泥冷鋼紋理素材，於藝術專題中展現原始、力量與真實的美感。' },
+        { id: 'water', label: '水彩藝術', prompt: '運用柔和的水色暈染邊緣與紙張纖維質感，在婚禮企劃或情感敘事中營造浪漫且溫潤的氛圍。' },
+        { id: 'vapor', label: '蒸氣波', prompt: '融合 80 年代復古元素、粉色霓虹漸層與超現實數位物件，於音樂或潮牌中建立迷幻懷舊風。' },
+        { id: 'moro', label: '摩洛哥', prompt: '採用繁複的異域幾何圖騰與溫慢的香料色調，於室內設計或旅遊企劃中展現豐富的文化深度。' },
+        { id: 'dkmin', label: '暗黑極簡', prompt: '使用豐富層次的黑灰色調進行構成，強調極低調的奢華感，適用於高端奢侈品或藝術設計發表。' },
+        { id: 'memphis', label: '孟菲斯', prompt: '運用鮮豔明快的亂數幾何與曲線拼貼效果，於兒童 brand 或創意活動中營造歡樂且跳躍的氛圍。' },
+        { id: 'lowp', label: '低多邊形', prompt: '結合細小三角形塊面堆疊，營造水晶切割的稜角質感，於 3D 建模或數位藝術中展現科技美。' },
+        { id: 'v25', label: '商業顧問型', prompt: '運用嚴謹金字塔邏輯框架與專業中性灰色調，在策略提案中展現權威性、邏輯性與決策深度。' },
+        { id: 'v26', label: '深度故事型', prompt: '採取高對比光影處理與電影質感分鏡排版，於品牌微電影腳本中強化情感張力與沉浸式體驗。' },
+        { id: 'v27', label: '實作教學型', prompt: '使用標準化步驟導引圖標、強調框與局部放大效果，於專業軟體教學中提供清晰的操作指引。' },
+        { id: 'v28', label: '戰略藍圖型', prompt: '呈現宏觀鳥瞰圖式架構，利用蜿蜒路徑標註各階段關鍵節點，適用於長期願景與藍圖規劃。' },
+        { id: 'v29', label: '英雄旅程型', prompt: '透過循環感強烈的圖形呈現啟程、挑戰與重生的階段轉折，於勵志故事中激發受眾的情感共鳴。' },
+        { id: 'v30', label: '系統解析型', prompt: '展示產品內部的精細零件結構與關聯線條，在工程技術說明中提供高度透明的專業解析視覺。' },
+        { id: 'v31', label: '百科全書型', prompt: '模仿復古科學插畫風格，搭配細緻的手寫體註解，於科普知識傳播中建立權威感與典藏價值。' },
+        { id: 'v32', label: '工業工程型', prompt: '採用深藍底色搭配亮色精密網格線，在機械設計或硬體開發中展現極致精確的工業技術美感。' },
+        { id: 'v33', label: '拼貼藝術型', prompt: '混合不同材質的舊紙張、剪報、照片與手繪元素，於獨立創作中建立獨特、隨性且具層次感。' },
+        { id: 'v34', label: '像素藝術風', prompt: '採用經典 8-bit 與 16-bit 像素格點質感，在復古遊戲 or 數位文創中營造懷舊、趣味的風格。' },
+        { id: 'v35', label: '歐普視覺型', prompt: '利用黑白幾何線條交錯產生的視覺錯視效果，於藝術裝置或前衛設計中創造動感與迷幻感受。' },
+        { id: 'v36', label: '故障藝術型', prompt: '刻意製造數位雜訊、掃描線偏移與色彩重疊效果，在音樂錄影帶或潮流設計中展現叛逆未來感。' },
+        { id: 'v37', label: '未來主義型', prompt: '強調流線型動態、斜角透視與極速感線條，在汽車設計或運動品牌中展現突破時空的速度美感。' },
+        { id: 'v38', label: '立體透視型', prompt: '採用 45 度等距透視視角營造精細的微縮城市感，於地圖設計或遊戲場景中展現完整空間感。' },
+        { id: 'v39', label: '漫畫分格型', prompt: '運用動態分鏡框、放射狀背景與擬聲詞裝飾，於行銷腳本中增加故事性，營造熱血的閱讀節奏。' },
+        { id: 'v40', label: '植物圖譜型', prompt: '以細膩線條描繪生物構造細節，搭配低飽和大地色系，於有機品牌或科學研究中展現自然美。' },
+        { id: 'v41', label: '雜誌排版型', prompt: '融合跨頁設計理念，運用大膽標題字體與靈活留白，於高端時尚或生活刊物中營造精品級排版。' },
+        { id: 'v42', label: '奢華裝飾型', prompt: '採用對稱的幾何線條與金色邊緣處理，於高端酒店或奢侈品活動中展現貴族般的華麗與莊重感。' },
+        { id: 'v43', label: '迷幻流體型', prompt: '結合斑斕奪目的液體流動質感與大膽配色，於靈感激發或創意活動中創造無限想像的視覺張力。' },
+        { id: 'v44', label: '浮世繪風情', prompt: '模仿木刻版畫的細膩勾邊、平面色塊與古典構圖，於日本文化推廣中展現典雅且具歷史的韻味。' },
+        { id: 'v45', label: '羊皮紙史詩', prompt: '運用泛黃羊皮卷質感與火漆印章裝飾，於歷史敘事或奇幻故事中營造宏大、古典的傳奇色彩。' },
+        { id: 'v46', label: '低保真文青', prompt: '具備邊緣漏光與細微噪點的膠卷攝影質感，採用暖黃色調，於個人品牌中營造文藝與懷舊感。' },
+        { id: 'v47', label: '數位指揮中心', prompt: '結合浮動數據介面、動態掃描環與全息顯示技術，於網路安全或系統管理中展現頂尖精密感。' },
+        { id: 'v48', label: '城市建築型', prompt: '使用冷峻的水泥灰色調與銳利的幾何建築線條，於城市規劃或現代建案中展現專業硬朗的結構。' },
+        { id: 'v49', label: '抽象幾何型', prompt: '將圓形、三角形進行重疊、解構與色塊重組，於藝術海報設計中呈現充滿哲思與平衡的抽象美。' },
+        { id: 'v50', label: '慶典氣氛型', prompt: '自動注入節慶色彩、煙火效果與歡樂元素，於活動邀約或社群祝賀中營造熱烈、喜悅的情緒感。' }
+    ],
+    tones: [
+        { id: 'insp', label: '專業啟發', prompt: '融合前瞻思維與專業見解，以啟發性語調引導受眾思考未來，展現品牌高度與遠見。' },
+        { id: 'acad-t', label: '嚴謹學術', prompt: '嚴格遵循學術規範，使用中性精確語法進行邏輯推導，確保內容具備專業性與實證。' },
+        { id: 'crea', label: '活潑創意', prompt: '大膽突破傳統框架，運用生動有趣擬人化意象與創意描述，為內容注入活力驚喜。' },
+        { id: 'min-t', label: '簡約精煉', prompt: '實踐極致簡約美學，精確剔除冗餘修飾，僅保留核心數據核心，適合高階決策閱覽。' },
+        { id: 'pers', label: '說服力強', prompt: '深度運用心理學說服邏輯，透過層層遞進論證點燃受眾需求，強力驅動轉化行動力。' },
+        { id: 'narr', label: '故事敘述', prompt: '藉由鮮明角色情節張力構建沉浸體驗，將生硬道理化為感性敘事，建立品牌情感連結。' },
+        { id: 'humor', label: '幽默風趣', prompt: '展現機智幽默感並巧妙加入生活化比喻，以輕鬆口吻化解枯燥主題，精準傳達訊息。' },
+        { id: 'auth', label: '權威堅定', prompt: '語氣冷靜且果斷，透過肯定句式建立不可撼動權威形象，展現領袖風範贏得信任感。' },
+        { id: 'emp', label: '溫溫共情', prompt: '採用溫暖且具包容力口吻，側重情緒價值與心理連結，讓受眾感受到真誠關懷共鳴。' },
+        { id: 'urg', label: '緊迫號召', prompt: '強力營造時間壓力與稀缺感，運用短促有力語句驅動即時行動，適合促銷或危機情境. ' },
+        { id: 'prov', label: '辛辣批判', prompt: '採取犀利直接批判視角，大膽挑戰產業現狀揭露事物本質真相，引發深度反思碰撞. ' },
+        { id: 'vis', label: '前瞻策略', prompt: '站在未來維度俯瞰變革，強調長期的戰略價值與轉型趨勢，為企業規劃國際視野藍圖. ' },
+        { id: 'humbl', label: '謙遜誠懇', prompt: '保持低調且透明溝通態度，以真誠務實風格建立長期信任，適合道歉或經驗分享. ' },
+        { id: 'tech-t', label: '精密技術', prompt: '排除感性描述，嚴格遵循數據指標與專業術語，為複雜系統提供精確技術解析說明. ' },
+        { id: 'eleg', label: '優雅文藝', prompt: '字句雕琢精緻富有韻律感，營造如詩文藝美學氛圍，展現高品質與優雅品牌語境. ' },
+        { id: 'ener', label: '熱血激昂', prompt: '充滿強大情緒能量，用高昂語調點燃讀者鬥志，適合用於啟動大會、運動品牌宣傳募資. ' },
+        { id: 'tone-pro', label: '專業嚴謹', prompt: '展現專業權威且具邏輯性的筆觸，確保內容經得起檢驗，適用商務信函與審計報告. ' },
+        { id: 'tone-warm', label: '溫溫共感', prompt: '語氣溫暖柔和且具備高度同理心，強調人際間關懷與溫度，適合母嬰或情感創作. ' },
+        { id: 'tone-insp', label: '啟發鼓舞', prompt: '筆調充滿遠見與強烈使命感，旨在點燃受眾內在熱情並激發行動，適用職涯與非營利. ' },
+        { id: 'tone-hum', label: '幽默梗圖', prompt: '風格輕鬆詼諧，適時加入網路流行語與幽默自嘲，適合年輕族群行銷、交流社群內容. ' },
+        { id: 'tone-obj', label: '客觀中立', prompt: '採取冷靜且平衡的第三方中立視角，不帶個人情感色彩，適用新聞報導與事實陳述. ' },
+        { id: 'tone-sharp', label: '犀利反思', prompt: '以大膽質疑態度剖析事物本質，口吻直接且具穿透力，適合觀點碰撞、變革策略諮詢. ' },
+        { id: 'tone-epic', label: '史詩劇情感', prompt: '語氣宏大且富有強烈戲劇張力，描繪波瀾壯闊發展歷程，適合發布會、歷史回顧影音. ' },
+        { id: 'tone24', label: '決策策略型', prompt: '強調行動優先級與方案權衡，展現高階管理者策略視野，適合董事會呈報與轉型建議. ' },
+        { id: 'tone25', label: '風險防範型', prompt: '語氣謹慎具前瞻性，專注於挖掘潛在漏洞與法律邊界，適用保險說明、資安評估報告. ' },
+        { id: 'tone26', label: '實務落地型', prompt: '語氣極度務實精煉，剔除空洞理論直接給出執行指引，適合生產流程、手冊執行清單. ' },
+        { id: 'tone27', label: '懸疑啟發型', prompt: '透過層層設問引發強烈好奇心，引導讀者探索中發現結論，適合懸疑文案與廣告開場. ' },
+        { id: 'tone28', label: '懷舊共鳴型', prompt: '使用富有時代感溫潤詞彙，喚起特定族群集體記憶，適合品牌復刻、老店與紀錄片. ' },
+        { id: 'tone29', label: '深度自省型', prompt: '以誠懇且謙卑態度分享挫敗與轉化，建立高度真實連結，適合創辦人信函、品牌成長. ' },
+        { id: 'tone30', label: '諷刺反轉型', prompt: '運用冷靜諷刺與黑色幽默，在荒謬觀察中傳達深刻觀點，具備強烈記憶點與廣告張力. ' },
+        { id: 'tone31', label: '陪跑教練型', prompt: '語氣積極且極具耐心，著重克服心理障礙與細微鼓勵，賦予受眾力量適合線上指南. ' },
+        { id: 'tone32', label: '科普降維型', prompt: '將專業術語轉化為直覺生活比喻，語言親切易讀，確保零基礎受眾無痛吸收科普教育. ' },
+        { id: 'tone33', label: '診斷回饋型', prompt: '像顧問般冷靜指出痛點與成因，並給出精準處方箋建議，強調對症下藥之效. ' },
+        { id: 'tone34', label: '禪意冥想型', prompt: '語氣充滿哲思與大量空間感，追求精神深處的平靜啟發，而非即時物質行動. ' },
+        { id: 'tone35', label: '邏輯辯證型', prompt: '採取正反觀點碰撞的辯論語氣，在理性對抗中尋求最嚴密的客觀科學真理. ' },
+        { id: 'tone36', label: '極客發燒型', prompt: '充滿對底層邏輯與性能的痴迷，遣詞用字硬核且專業，適合極致要求族群. ' },
+        { id: 'tone37', label: '奢華精緻型', prompt: '使用典雅且講究的形容詞，營造品牌獨特性與卓越質感，展現高社會地位. ' },
+        { id: 'tone38', label: '律令合規型', prompt: '語氣極度中性與標準化，確保內容完全符合產業法律規範、倫理與合規. ' },
+        { id: 'tone39', label: '預言遠見型', prompt: '語氣充滿確定性與號召力，描繪具體的未來生活場景，展現引領時代變革. ' },
+        { id: 'tone40', label: '跨界整合型', prompt: '擅長借用藝術或運動等異領域邏輯來隱喻當前主題，激發跨維度的創意思考. ' }
+    ],
+    audiences: [
+        { id: 'gen', label: '一般大眾', prompt: '運用通俗語言拆解知識，降低理解門檻，適合大眾科普推廣。' },
+        { id: 'exec', label: '公司高層', prompt: '彙整決策價值與預期收益，採取結論先行風格，適合內部呈報。' },
+        { id: 'clie', label: '潛在客戶', prompt: '針對具體痛點提供解方，強調產品優勢，適用於開發潛在客戶。' },
+        { id: 'stud', label: '學生族群', prompt: '採用循序漸進教學邏輯，輔以實例說明，適合課程或學習筆記。' },
+        { id: 'soc', label: '社群讀者', prompt: '運用具視覺衝擊力短句，強化瞬間記憶，適合社群媒體爆款。' },
+        { id: 'dev', label: '技術開發', prompt: '描述架構細節與代碼實作邏輯，強調嚴謹度，適合技術文檔。' },
+        { id: 'inv', label: '投資人士', prompt: '剖析商業模式與市場潛力，強調獲利能力，適合用於融資計畫。' },
+        { id: 'entr', label: '創業家', prompt: '分析市場破局點與生存策略，強調資源整合，適合創業指導。' },
+        { id: 'hr', label: '人資招聘', prompt: '展現文化底蘊與人才發展優勢，強調認同感，適合用於招募。' },
+        { id: 'free', label: '自由職業', prompt: '提供效率工具與品牌建立建議，強調靈活度，適合自僱者指南。' },
+        { id: 'seni', label: '銀髮族', prompt: '採取超大視覺與極簡操作指引，用語親切，適合銀髮族生活助手。' },
+        { id: 'pare', label: '家長家教', prompt: '提供發展階段建議與教養策略，語氣溫暖，適合家庭教育專題。' },
+        { id: 'poli', label: '政策官員', prompt: '強調政策可行性與公共利益價值，論點嚴謹，適合政府報告撰寫。' },
+        { id: 'kols', label: '影音創作', prompt: '提供變現與粉絲經營策略，強調創意熱度，適合影音創作者建議。' },
+        { id: 'heal', label: '醫療專業', prompt: '引用最新科學數據與實證，確保資訊精確，適合醫療專業交流。' },
+        { id: 'craft', label: '專業技工', prompt: '提供標準作業程序與風險規避指引，強調實務，適合操作手冊。' },
+        { id: 'aud17', label: '法律法務', prompt: '專注法律合規細節與風險分析，用語精確，適合法務或條文解析。' },
+        { id: 'aud18', label: '品牌設計師', prompt: '強調視覺美學與品牌一致性落實，注重美感，適合品牌規範文案。' },
+        { id: 'aud19', label: '行銷規劃者', prompt: '關注渠道策略與市場定位實務建議，強調轉化，適合行銷企劃。' },
+        { id: 'aud20', label: '第一線業務', prompt: '側重銷售話術與即時成交技巧，提供應對策略，適合業務實戰。' },
+        { id: 'aud21', label: '數據科學家', prompt: '專注統計顯著性與建模邏輯，強調相關性，適合數據科學研究。' },
+        { id: 'aud22', label: 'Z 世代讀者', prompt: '運用迷因感與視覺個性，追求真實感表達，適合 Z 世代推廣。' },
+        { id: 'aud23', label: 'Alpha 世代', prompt: '針對全數位原住民，強調遊戲化互動、視覺刺激與直覺引導。' },
+        { id: 'aud24', label: '綠色倡議者', prompt: '關注環境永續與道德消費論述，強調責任感，適合綠色行銷。' },
+        { id: 'aud25', label: '高資產人士', prompt: '強調隱私保護與資產傳承方案，語氣尊榮，適合高淨值理財。' },
+        { id: 'aud26', label: '硬核玩家', prompt: '專注系統平衡與沈浸式體驗探討，用語硬核，適合玩家討論區。' },
+        { id: 'aud27', label: '經銷通路商', prompt: '關注利潤空間與供應鏈穩定細節，強調價值，適合經銷商推介。' },
+        { id: 'aud28', label: '中階管理層', prompt: '側重跨部門協調與績效追蹤建議，強調資源配置，適合主管管理。' },
+        { id: 'aud29', label: '現場作業員', prompt: '提供極簡 SOP 與安全操作指令，用語直白，適合現場作業引導。' },
+        { id: 'aud30', label: '職場新鮮人', prompt: '專注基礎技能上手與職場禮儀指南，建立信心，適合新鮮人手冊。' },
+        { id: 'aud31', label: '科學研究員', prompt: '強調實驗設計嚴謹度與評議標準，用語權威，適合專業學術交流。' },
+        { id: 'aud32', label: '非營利組織', prompt: '關注社會影響力衡量與資源整合，強調使命感，適合 NGO 發展。' },
+        { id: 'aud33', label: '媒體記者', prompt: '提供具新聞點的核心觀點與數據摘要，便於摘錄，適合媒體採訪。' },
+        { id: 'aud34', label: '藝術創作者', prompt: '探討靈感啟發與表達媒介突破，強調風格，適合藝術創作者交流。' },
+        { id: 'aud35', label: '求職轉職者', prompt: '側重個人價值定位與面試攻防策略，強調競爭力，適合求職指南。' },
+        { id: 'aud36', label: '數位遊民', prompt: '關注遠端協作工具與跨境效率策略，強調自由，適合數位遊民分享。' },
+        { id: 'aud37', label: '電商賣家', prompt: '專注流量變現與投報優化技巧，強調數據實戰，適合電商賣家經營。' },
+        { id: 'aud38', label: '產品經理', prompt: '強調產品藍圖與技術可行性權衡分析，注重邏輯，適合 PM 溝通。' },
+        { id: 'aud39', label: '客戶成功經理', prompt: '關注用戶留存與降低流失率策略，強調服務價值，適合客戶成功手冊。' },
+        { id: 'aud40', label: '公共行政人員', prompt: '側重行政流程優化與法規解釋程序，用語嚴謹，適合行政人員報告。' }
+    ],
+    formats: [
+        { id: 'f1', label: '簡報分頁', prompt: '採用「投影片編號：標題」呈現分頁結構，詳列視覺重點與內容說明，適合商務簡報排版。' },
+        { id: 'f2', label: '雙欄腳本', prompt: '使用專業雙欄表格結構區分畫面描述與旁白腳本，節奏明確具體，適合各類影音創作執行。' },
+        { id: 'f3', label: '貼文串', prompt: '將核心內容拆解為多則適合社群媒體閱讀的系列短文，風格活潑具導購力，適合社群媒體經營。' },
+        { id: 'f4', label: '逐字稿', prompt: '完整擴展語意並包含自然語助詞的口語化逐字稿，呈現真實對話感，適合 Podcast 或演講。' },
+        { id: 'f5', label: '表格清單', prompt: '使用 Markdown 表格語法清晰輸出關鍵論點與數據對比，排版整齊專業，適合專業研究摘要。' },
+        { id: 'f6', label: '紀錄片腳本', prompt: '採取深度人文紀實視角，結合場景氛圍與旁白敘述，結構宏大專業，適合影視專業紀錄片製作。' },
+        { id: 'f7', label: '戰略計畫書', prompt: '包含核心願景、里程碑與資源分配效益的標準格式，文字權威且嚴謹，適合商務各類企劃提案。' },
+        { id: 'f8', label: '互動對話劇本', prompt: '模擬使用者與專家對話流，包含不同情境分支的應對策略，語氣自然，適合線上課程、導覽。' },
+        { id: 'f9', label: '商業價值單頁面', prompt: '以極致濃縮的 One-Pager 提案格式呈現，聚焦價值主張與核心痛點，適合決策層快速閱覽。' },
+        { id: 'f10', label: '衝突性故事大綱', prompt: '採用經典劇作架構，明確標註劇情衝突點、轉折與情緒高峰，節奏感強，適合品牌創意短片。' },
+        { id: 'f11', label: '階梯式教學指南', prompt: '採用奈米級步驟分解結構，每一動作皆包含執行重點與檢查清單，詳盡清晰，適合各類實作教學。' },
+        { id: 'f12', label: '診斷式 Q&A 格式', prompt: '模仿顧問診斷流程，以徵兆提問搭配對症下藥的對策結構呈現，風格犀利，適合顧問諮詢建議。' },
+        { id: 'f13', label: '多維度對比矩陣', prompt: '使用 Markdown 比較表橫向對比不同路徑成本、風險與長期回報，視覺清晰，適合投資決策。' },
+        { id: 'f14', label: '模組化知識地圖', prompt: '以層級標題展示核心概念與衍生細節，建立體系化知識結構，排版邏輯強，適合建立企業雲端。' },
+        { id: 'f15', label: '懸疑引導式文案', prompt: '以提問與伏筆交替呈現，逐步揭開最終結論，營造強烈好奇心與沉浸感，適合吸引高端潛在客戶。' },
+        { id: 'f16', label: '實戰避坑指南', prompt: '專注列出常見執行錯誤、失敗案例分析與背後的修復建議，風格務實精煉，適合專業技術交流。' },
+        { id: 'f17', label: '產品路線圖摘要', prompt: '以時間軸為經、功能組塊為緯，清晰呈現短期與長期的發展規劃，邏輯嚴密，適合產品開發團隊。' },
+        { id: 'f18', label: '角色沉浸式隨筆', prompt: '以特定角色第一人稱視角撰寫，強調心理活動、心路歷程與個人觀察，風格感性，適合品牌行銷. ' },
+        { id: 'f19', label: '行動導向白皮書', prompt: '結合深度研究數據與具體政策，具備產業權威感與明確執行落實指引，適合政府產業趨勢報告. ' },
+        { id: 'f20', label: '創意腦力激盪表', prompt: '使用發散性清單列出多元點子、關聯關鍵字與初步評估矩陣，風格開放多元，適合專案前期發想. ' }
+    ],
+    wordCounts: [
+        { id: 'w1', label: '短篇 500', prompt: '提供約 500 字內容，以精簡風格撰寫產品介紹，適合於部落格短評. ' },
+        { id: 'w2', label: '中篇 1K', prompt: '產出約 1000 字深度，採敘事風格描述產業趨勢，適合專題報導發表. ' },
+        { id: 'w3', label: '長篇 2K', prompt: '撰寫約 2000 字詳盡內容，風格權威嚴謹，適合用於白皮書或深度研究. ' },
+        { id: 'w4', label: '不限篇幅', prompt: '依據主題複雜度決定長度，採取自然流暢風格，適合創作各類長篇故事. ' },
+        { id: 'w5', label: '完整框架', prompt: '輸出包含章節標題與核心論點的完整框架，風格邏輯強，適合企劃發想. ' },
+        { id: 'w6', label: '極短精煉 100', prompt: '嚴格控制在 100 字內，僅保留最具衝擊力的核心訊息，適合電梯簡報. ' },
+        { id: 'w7', label: '標準 A4 篇幅', prompt: '提供約 800 字標準篇幅，文字端莊正式，適用於各類正式商務文件撰寫. ' },
+        { id: 'w8', label: '微型敘事 300', prompt: '限制於 300 字內，強調快節奏情緒感染力，適合社群媒體短文或分享. ' },
+        { id: 'w9', label: '深度專題 3K', prompt: '產出約 3000 字長文，包含完整背景調研，適合學術研究或產業深挖. ' },
+        { id: 'w10', label: '單頁 One-Pager', prompt: '以單頁紙張承載量為準，語氣具決策重量，適合高階主管快速閱覽摘要. ' },
+        { id: 'w11', label: '極致細節 5K+', prompt: '篇幅不限並追求奈米級細節，適合製作操作手冊、技術文檔或硬核解析. ' },
+        { id: 'w12', label: '黃金三分鐘', prompt: '控制在 900 字左右，符合三分鐘演講語速，適合影片旁白或致詞演說. ' },
+        { id: 'w13', label: '閃電筆記型', prompt: '以清單與短句構成不超過 200 字，風格乾脆，適合關鍵知識點瞬間吸收. ' },
+        { id: 'w14', label: '章節式連載', prompt: '拆解為連貫小章節，每章約 400 字，強調起承轉合，適合故事連載創作. ' },
+        { id: 'w15', label: '純粹邏輯清單', prompt: '僅以奈米級條列式呈現邏輯推演，去除冗餘段落，適合各類專案流程梳理. ' }
+    ],
+    colors: [
+        { id: 'beige', label: '暖白米色', swatches: ['#FFFFFF', '#F5F5DC', '#D2B48C'], prompt: '採用濃郁暖白與米色調，為個人札記或居家部落格營造溫馨親和氛圍。' },
+        { id: 'navy', label: '專業深藍', swatches: ['#0D1B2A', '#1B263B', '#E0E1DD'], prompt: '運用深海軍藍搭配石板灰，於顧問簡報中建立穩重形象，展現商業深度。' },
+        { id: 'blue', label: 'Word 藍', swatches: ['#2B579A', '#FFFFFF', '#D9E1F2'], prompt: '結合深藍與純白色調，適用正式合約或文件，確保極致易讀與標準質感。' },
+        { id: 'orange', label: 'PPT 橘', swatches: ['#B7472A', '#FFFFFF', '#FFF2CC'], prompt: '運用暖橘與深紅組合，於行銷提案中快速抓取視線，展現活力與創意。' },
+        { id: 'gold', label: '奢華黑金', swatches: ['#000000', '#D4AF37', '#1A1A1A'], prompt: '以純黑底搭配磨砂金，適用高端精品文案，營造極具奢華感的獨特氛圍。' },
+        { id: 'mora', label: '莫蘭迪色', swatches: ['#9A8C98', '#C9ADA7', '#F2E9E4'], prompt: '採用低飽和度灰階色彩，於建築作品集或設計指南中呈現高級理性美學。' },
+        { id: 'pure', label: '純淨科技', swatches: ['#FFFFFF', '#F2F2F7', '#007AFF'], prompt: '結合極簡白與系統藍，在科技新創網頁中強調純淨感，突顯現代化質感。' },
+        { id: 'cyberc', label: '賽博配色', swatches: ['#000000', '#FF00FF', '#00FFFF'], prompt: '使用純黑配螢光紫青，適用遊戲影音 or 前衛設計，打造數位感的未來風。' },
+        { id: 'forest', label: '森林墨綠', swatches: ['#1A3021', '#4F6D44', '#F0F2EF'], prompt: '運用深墨綠配米白，為環保品牌注入自然永續質感，展現具備生命力感。' },
+        { id: 'sunset', label: '落日餘暉', swatches: ['#FF5F6D', '#FFC371', '#403B4A'], prompt: '夕陽橙過渡至深紫紅，適用旅遊札記或感性故事，營造渲染力視覺情緒。' },
+        { id: 'grey', label: '極致灰階', swatches: ['#000000', '#8E8E93', '#FFFFFF'], prompt: '運用純黑至雪白層次灰色，在攝影集或畫冊中展現極致中性與經典美學。' },
+        { id: 'lave', label: '薰衣草紫', swatches: ['#E6E6FA', '#967BB6', '#F8F8FF'], prompt: '採用丁香紫搭配珠光白，適用婚禮企劃或香氛宣傳，營造浪漫且夢幻感。' },
+        { id: 'latt', label: '咖啡拿鐵', swatches: ['#4B3621', '#C68E17', '#FFF5EE'], prompt: '以濃郁咖啡配奶油米色，為精品咖啡或書店提案注入溫度，展現匠人感。' },
+        { id: 'arct', label: '北極冰川', swatches: ['#A5D6F1', '#1E3A5F', '#F0F8FF'], prompt: '採用冰川藍配雪白色調，適用醫療科技或產品包裝，傳達潔淨科學質感。' },
+        { id: 'emeral', label: '復古祖母', swatches: ['#004B49', '#B8860B', '#F5F5DC'], prompt: '結合祖母綠配古銅金，於奢華室內設計提案中展現典雅與濃厚歷史底蘊。' },
+        { id: 'uneon', label: '城市霓虹', swatches: ['#121212', '#E6FF00', '#00FF41'], prompt: '運用石墨背景點綴電光黃綠，適用健身或潮流廣告，展現高能量與爆發。' },
+        { id: 'sakur', label: '春日櫻花', swatches: ['#FFB7C5', '#90EE90', '#FFF5F7'], prompt: '運用櫻花粉配珍珠白，在美妝手冊或活動邀約中強調青春感與柔和清新。' },
+        { id: 'deser', label: '沙漠大地', swatches: ['#C19A6B', '#A55D35', '#708090'], prompt: '結合土黃、陶土紅配石板灰，適用冒險旅遊品牌，呈現堅毅的自然質感。' },
+        { id: 'ocea', label: '深海秘境', swatches: ['#000080', '#40E0D0', '#FF7F50'], prompt: '海軍藍過渡至綠松色，適用海洋保育報告，呈現專業深度且具神祕層次。' },
+        { id: 'must', label: '芥末炭黑', swatches: ['#E1AD01', '#333333', '#F2F2F2'], prompt: '運用芥末黃與深炭黑對比，適用創意工作室或工業設計，展現大膽風格. ' },
+        { id: 'midn', label: '午夜幽紫', swatches: ['#2E1A47', '#4B0082', '#C0C0C0'], prompt: '採用午夜紫與靛藍色調，適用助眠科技或影音，營造神祕靜謐的心理層次. ' },
+        { id: 'slat', label: '陶土石板', swatches: ['#E2725B', '#708090', '#FDF5E6'], prompt: '結合赤陶土色配石板青，為手工藝品牌或生活美學文案提供質感的溫潤. ' },
+        { id: 'cand', label: '繽紛糖果', swatches: ['#98FF98', '#FFF44F', '#FFD1DC'], prompt: '運用薄荷綠、檸檬黃配蜜桃粉，適用兒童產品或派對，展現甜美歡樂感. ' },
+        { id: 'nebu', label: '星雲幻境', swatches: ['#0B0B0B', '#8A2BE2', '#FF007F'], prompt: '深空黑配星雲紫與螢光粉，適用航太或科幻遊戲，打造無限想像的視界. ' },
+        { id: 'min-white', label: '極簡白', swatches: ['#FFFFFF', '#F8F9FA', '#ADB5BD'], prompt: '運用純白與極大留白，在作品集或藝廊導覽中強調極致淨度與空氣美學. ' },
+        { id: 'biz-navy', label: '商務質感', swatches: ['#002147', '#D4AF37', '#F5F5F5'], prompt: '採用深藍背景配燙金配色，於企業結案或領袖介紹中展現權威專業形象. ' },
+        { id: 'tech-modern', label: '科技現代', swatches: ['#000000', '#00F5FF', '#00FF7F'], prompt: '以黑色背景配螢光藍綠，適用安防警示或系統架構，營造前衛精密技術感. ' },
+        { id: 'nat-fresh', label: '自然清新', swatches: ['#F5F5F5', '#A3B18A', '#588157'], prompt: '運用米白或淺綠背景，為有機保養品或環保部落格注入健康的純淨感. ' },
+        { id: 'pro-formal', label: '正式專業', swatches: ['#FFFFFF', '#004A99', '#333333'], prompt: '標準白底搭配企業藍色系，適用正式公告或簡報，展現高度中性正式感. ' },
+        { id: 'creative-viv', label: '創意活潑', swatches: ['#FFD700', '#FF4500', '#1E90FF'], prompt: '使用大膽撞色拼貼，適用工作坊廣告或音樂節，展現能量且不受限創意. ' },
+        { id: 'retro-story', label: '復古故事', swatches: ['#D2B48C', '#8B4513', '#5D4037'], prompt: '運用仿舊紙張與暖棕色調，適用品牌歷史手冊，營造濃厚懷舊經典情緒. ' },
+        { id: 'c32', label: '斯堪地冷調', swatches: ['#ECEFF1', '#CFD8DC', '#B0BEC5'], prompt: '採用冷灰色與冰藍色組合，於設計作品中展現簡潔清爽，建立高雅專業感. ' },
+        { id: 'c33', label: '包浩斯原色', swatches: ['#D50000', '#FFD600', '#2962FF'], prompt: '使用紅、黃、藍三原色搭配，適用幾何專案，強調功能與視覺平衡. ' },
+        { id: 'c34', label: '地中海蔚藍', swatches: ['#FFFFFF', '#00B0FF', '#01579B'], prompt: '以純白與靛藍交錯，適用旅遊推廣或夏日文案，呈現明亮開闊度假氛圍美. ' },
+        { id: 'c35', label: '復古底片感', swatches: ['#8D6E63', '#BCAAA4', '#5D4037'], prompt: '模擬膠捲色彩與微黃偏色，適用敘事影片或老店宣傳，增加情緒感的懷舊. ' },
+        { id: 'c36', label: '工業鐵鏽感', swatches: ['#455A64', '#78909C', '#BF360C'], prompt: '結合冷硬金屬灰與鐵鏽紅，於重工業報告中展現力量美學，營造硬朗個性. ' },
+        { id: 'c37', label: '夢幻粉彩系', swatches: ['#F8BBD0', '#E1BEE7', '#FFF9C4'], prompt: '運用柔和低飽和糖果色，適用甜點品牌或療癒 App，營造親切夢幻視覺. ' },
+        { id: 'c38', label: '深空幽影', swatches: ['#4A148C', '#1A237E', '#00E676'], prompt: '以深紫、靛黑與極光綠交織，打造科幻美學，適用科技介面或未來影音. ' },
+        { id: 'c39', label: '皇家翡翠', swatches: ['#1B5E20', '#A57C00', '#E8F5E9'], prompt: '運用沉穩墨綠搭配古銅金，彰顯低調奢華權威感，適用高端精品品牌宣傳. ' },
+        { id: 'c40', label: '活力珊瑚', swatches: ['#FF7043', '#00ACC1', '#263238'], prompt: '結合鮮豔珊瑚橘與藍綠色互補，適用健康或潮流品牌，展現充滿朝氣衝擊. ' }
+    ],
+    notes: [
+        { id: 'zpath', label: 'Z型路徑', prompt: '依照 Z 字型視覺規律編排內容，讓網頁瀏覽者能順暢閱讀重要資訊，提升轉化率與易讀性。' },
+        { id: 'golden', label: '黃金比例', prompt: '利用黃金比例分割版面空間，為平面廣告營造視覺平衡美感，呈現專業且具藝術感的排版。' },
+        { id: 'hier', label: '強化層級', prompt: '透過嚴格字體大小層級區分重點，於商業簡報中導引觀眾視覺焦點，確保核心訊息精確傳達。' },
+        { id: 'white', label: '戰略留白', prompt: '在設計中預留充足戰略性呼吸空間，減少視覺壓迫感，於高端品牌手冊中突顯簡潔優雅風。' },
+        { id: 'glow', label: '霓虹發光', prompt: '為核心標題或圖示添加霓虹發光特效，在科技感宣傳海報中營造未來氛圍，強力吸引視覺。' },
+        { id: 'grain', label: '復古顆粒', prompt: '於影像背景覆蓋細緻底片顆粒紋理，增加復古膠卷質感，適合用在人文敘事影片或海報。' },
+        { id: '3dfloat', label: '懸浮3D', prompt: '配置具立體透視感的懸浮物件裝飾，在數位產品介紹頁面中強化現代感，增加畫面層次深度。' },
+        { id: 'duo', label: '雙色調', prompt: '採用高對比雙色調濾鏡處理風格，於藝術展覽主視覺中建立前衛風格，突顯強烈個性化特徵。' },
+        { id: 'dflow', label: '數據流向', prompt: '加入動態數位流線路徑模擬數據流動，在金融圖表中展現資訊傳輸效率，強化科技視覺感。' },
+        { id: 'ctable', label: '強對比表', prompt: '利用高飽和度色彩區分對比數據，在產品競爭分析表中直觀標註優劣勢，提升資訊辨識率。' },
+        { id: 'mind', label: '心智節點', prompt: '以中心發散的節點分支呈現邏輯，於複雜知識庫架構中導引受眾快速理解體系，掌握核心。' },
+        { id: 'hook', label: '問題鉤子', prompt: '在內容最醒目處設置引人好奇的提問，於社群行銷短文中精準鎖定受眾興趣，引發點擊欲。' },
+        { id: 'cta', label: '行動呼籲', prompt: '使用強力色塊突顯行動指令按鈕，在行銷頁面末尾引導用戶執行下單動作，極大化轉化率。' },
+        { id: 'auth-z', label: '權威背書', prompt: '展示專業認證標章或具權威數據出處，在醫療保健產品頁面中建立高度信任感與專業性. ' },
+        { id: 'eh-cont', label: '極限對比', prompt: '大幅拉高明暗色度對比確保畫面清晰，於戶外廣告看板中強化文字可讀性，減少環境干擾. ' },
+        { id: 'm-blur', label: '動態模糊', prompt: '為動態元素添加微弱運動模糊效果，在體育賽事宣傳圖中增加速度感，捕捉瞬間競技張力. ' },
+        { id: 'g-layer', label: '幾何疊加', prompt: '疊加半透明幾何圖案層次，在品牌形象設計中增加現代美學深度，強化整體圖形結構感. ' },
+        { id: 'scan', label: '數位掃描', prompt: '覆蓋極細數位掃描線特效，於資安防禦技術說明中模擬電腦監控介面，營造精密技術氣氛. ' },
+        { id: 'center', label: '中心對焦', prompt: '採取中心對焦輻射狀版型設計，在單一主打產品促銷圖中將視覺重心鎖定，強化主體感. ' },
+        { id: 'glass-c', label: '磨砂容器', prompt: '採用半透明磨砂玻璃容器承載文字，在 App 介面設計中提升細緻質感，營造懸浮美感. ' },
+        { id: '3sec', label: '3秒注意力', prompt: '簡化訊息確保在 3 秒內抓住觀眾注意，於短影音開場畫面中快速傳達重點，防止受眾滑過. ' },
+        { id: 'split', label: '圖文分離', prompt: '嚴格執行文字與圖像完全分離設計，在複雜技術說明圖中確保閱讀無礙，提升資訊吸收. ' },
+        { id: 'light', label: '光影層次', prompt: '透過高品質模擬光影投射層次感，在建築室內渲染圖中營造真實氛圍，增加畫面寫實深度. ' },
+        { id: '8k', label: '超高畫質', prompt: '追求細節達到 8K 解析度極致渲染，在高端影視特效設計中展現細微紋理，滿足視覺品質. ' },
+        { id: 'new-hook', label: '吸引 Hook', prompt: '開場必須包含一個具備衝擊力的視覺亮點，於廣告短片中即刻建立興趣，降低流失率. ' },
+        { id: 'new-quote', label: '金句提煉', prompt: '提煉出具備高度傳播價值的金句短句，於社群媒體經營中建立品牌標籤，增加轉發價值. ' },
+        { id: 'new-analogy', label: '生活類比', prompt: '使用生活化類比轉化抽象概念，在深奧技術課程中引導學員建立聯想，協助其快速理解. ' },
+        { id: 'new-data', label: '數據支撐', prompt: '預留精確數據展示區塊，於商業談判簡報中增強論據的科學客觀性，全面提升論述說服力. ' },
+        { id: 'new-visual', label: '視覺建議', prompt: '針對內容性質標註最佳視覺呈現建議，在跨部門協作中提供統一設計標準，減少溝通成本. ' },
+        { id: 'new-cta', label: '行動 CTA', prompt: '結尾處配置具備明確引導的行動呼籲指令，於軟體試用頁面中指示操作路徑，增加點擊量. ' },
+        { id: 'new-fubai', label: '歷史伏筆', prompt: '巧妙埋下劇情伏筆並在後文形成回響，在長篇故事腳本中維持懸念感，提升讀者閱讀意願. ' },
+        { id: 'n32', label: '符號視覺化', prompt: '關鍵資訊旁置入精確表情符號視覺化，在新手指南中強化直覺理解度，讓內容更加鮮活有趣. ' },
+        { id: 'n33', label: '關鍵字加粗', prompt: '全文重要名詞一律採用加粗字體處理，於長篇專業報導中實現一眼抓重點，優化導讀體驗感. ' },
+        { id: 'n34', label: '蘇格拉底提問', prompt: '在段落間嵌入引發思考的蘇格拉底提問，於個人成長課程中引導受眾主動自省，內化學習知識. ' },
+        { id: 'n35', label: '風險預警標籤', prompt: '使用顯眼警告標誌標註常見執行誤區，在軟體操作手冊中提醒核心風險，減少用戶操作失誤. ' },
+        { id: 'n36', label: '奈米級拆解', prompt: '將複雜步驟拆解至奈米級最小執行單位，在 DIY 組裝教學中確保零基礎學員也能依序實踐. ' },
+        { id: 'n37', label: '跨領域類比', prompt: '借用其他行業邏輯進行跨領域類比解釋，在跨國企業內訓中激發受眾多元思考，打破慣性思維. ' },
+        { id: 'n38', label: '情感弧線設計', prompt: '版面佈局引導情緒由痛點焦慮轉向釋然，於心理輔導頁面中設計情感弧線，達成深度心靈共鳴. ' },
+        { id: 'n39', label: '交叉驗證檢查', prompt: '引用至少兩個權威來源進行交叉驗證，在深度市場分析報告中建立客觀真實性，強化內容權威. ' },
+        { id: 'n40', label: '文化在地化', prompt: '針對特定區域受眾進行文化在地化調整，於國際品牌廣告中替換當地用語，建立親切溝通連結. ' },
+        { id: 'n41', label: '強力動詞驅動', prompt: '標題與指令一律使用強力主動動詞開頭，於業務啟動大會中營造充沛能量感，帶動團隊行動力. ' },
+        { id: 'n42', label: '沉浸式五感', prompt: '在文字描述中加入視覺與聽覺暗示，於精品餐飲介紹中營造沉浸式五感，誘發受眾感官慾望. ' },
+        { id: 'n43', label: '結論先行結構', prompt: '頁面最頂端直接輸出核心最終結論，於高效商務匯報中節省主管決策時間，後續再展示論證. ' },
+        { id: 'n44', label: '互動回饋迴路', prompt: '預留掃碼測驗等讀者互動回饋建議，在知識型內容末尾收集用戶反饋，建立雙向社群互動鏈. ' },
+        { id: 'n45', label: '原始資料引用', prompt: '在註腳處明確標註所有數據原始來源出處，於學術性研究報告中展現嚴謹度，確保內容誠信. ' },
+        { id: 'n46', label: '核心痛點鎖定', prompt: '開篇精準鎖定受眾最迫切的痛點困擾，於產品推廣文案中建立高度相關性，快速吸引目標客群. ' },
+        { id: 'n47', label: '數位足跡追蹤', prompt: '在內容中嵌入特定追蹤標籤語句，於數位行銷活動中分析受眾偏好行為，作為後續優化依據. ' },
+        { id: 'n48', label: '解決方案評級', prompt: '對多個路徑進行投入回報比的星等評分，在策略選型報告中清晰展示優劣，輔助理性決策. ' },
+        { id: 'n49', label: '視覺隱喻對比', prompt: '利用冰山或種子等視覺隱喻進行對比，在企業品牌願景傳遞中具象化核心價值，提升認同深度. ' },
+        { id: 'n50', label: '詞彙難易控制', prompt: '依據設定受眾層級嚴格控制術語難度，於科普類文章中維持易讀性，確保資訊傳遞無門檻. ' },
+        { id: 'n51', label: '懸念鋪陳設計', prompt: '在章節末尾留下不完整的關鍵線索，於連載小說或影集腳本中設計懸念，引導受眾持續點閱. ' },
+        { id: 'n52', label: '格式一致性檢查', prompt: '確保所有層級標題與間距遵循統一規範，於政府公文或正式報告中展現極致專業與嚴整美學. ' },
+        { id: 'n53', label: '專家視角修正', prompt: '在總結處以專家點評形式補充獨到洞察，於產業白皮書中提供內行觀點，大幅提升內容價值. ' },
+        { id: 'n54', label: '數據視覺化標註', prompt: '為所有數字內容標註建議使用的圖表類型，在數據視覺化專案中引導設計，確保呈現精確. ' },
+        { id: 'n55', label: '轉折點強化', prompt: '在內容邏輯發生改變時使用醒目轉場符號，於演講投影片中引導聽眾節奏，避免注意力渙散. ' },
+        { id: 'n56', label: '失敗案例分析', prompt: '加入具體失敗案例清單明確避雷重點，於創業培訓教材中指出潛在風險點，協助受眾降低成本. ' },
+        { id: 'n57', label: '自問自答 FAQ', prompt: '預判受眾疑惑並以自問自答形式直接掃除障礙，在系統導覽中快速解答問題，提升用戶滿意度. ' },
+        { id: 'n58', label: '多維度矩陣圖', prompt: '建議將複雜資訊轉化為多維度比較矩陣，在產品軟體選型指南中提供視覺參照，輔助高效對比. ' },
+        { id: 'n59', label: '心理偏誤利用', prompt: '結合錨定效應等心理偏誤設計文案誘因，於節慶促銷活動中增加吸引力，有效帶動用戶消費. ' },
+        { id: 'n60', label: '終極行動清單', prompt: '文末彙整不超過三項的具體終極行動清單，在課程結尾引導學員立即執行，將知識轉化為成果. ' }
+    ]
+};
+
+const firebaseConfig = JSON.parse(__firebase_config);
+const app = initializeApp(firebaseConfig);
+const auth = getAuth(app);
+const db = getFirestore(app);
+const appId = typeof __app_id !== 'undefined' ? __app_id : 'default-app-id';
+
+let user = null;
+let title = '';
+let customNotes = '';
+let selections = { roles: [], infographic: null, type: null, structure: null, format: null, wordCount: null, visual_style: null, tone: null, audience: null, color: null, notes: [] };
+let openGroups = new Set();
+
+const selectionGroupsContainer = document.getElementById('selection-groups-container');
+const titleInput = document.getElementById('title-input');
+const customNotesInput = document.getElementById('custom-notes-input');
+const promptOutput = document.getElementById('prompt-output');
+const copyBtn = document.getElementById('copy-btn');
+
+const buildPrompt = () => {
+    let p = "";
+    const indent = "　　";
+    if (title.trim()) p += `# 主題: "${title.trim()}"\n`;
+    if (selections.type) p += `\n# 內容類型\n${indent}${selections.type.label}: ${selections.type.prompt}\n`;
+    if (selections.roles.length > 0) {
+        p += `\n# 角色設定\n`;
+        selections.roles.forEach(r => { p += `${indent}${r.label}- ${r.prompt}\n`; });
+    }
+    if (selections.structure) p += `\n# 邏輯架構\n${indent}${selections.structure.label}: ${selections.structure.prompt}\n`;
+    if (selections.infographic) p += `\n# 懶人包策略\n${indent}${selections.infographic.label}: ${selections.infographic.prompt}\n`;
+    if (selections.visual_style) p += `\n# 視覺風格\n${indent}${selections.visual_style.label}: ${selections.visual_style.prompt}\n`;
+    if (selections.color) p += `\n# 配色美學\n${indent}${selections.color.label}: ${selections.color.prompt}\n`;
+    if (selections.tone) p += `\n# 語氣\n${indent}${selections.tone.label}: ${selections.tone.prompt}\n`;
+    if (selections.audience) p += `\n# 目標受眾\n${indent}${selections.audience.label}: ${selections.audience.prompt}\n`;
+    if (selections.format) p += `\n# 輸出格式\n${indent}${selections.format.label}: ${selections.format.prompt}\n`;
+    if (selections.wordCount) p += `\n# 文字數量限制\n${indent}${selections.wordCount.label}: ${selections.wordCount.prompt}\n`;
+    if (customNotes.trim()) p += `\n# 額外自訂要求\n${customNotes.trim()}\n`;
+    if (selections.notes.length > 0) {
+        p += `\n# 奈米級執行清單\n`;
+        selections.notes.forEach(n => { p += `${indent}${n.label}- ${n.prompt}\n`; });
+    }
+    promptOutput.textContent = p.trim();
+};
+
+const renderSelections = () => {
+    selectionGroupsContainer.innerHTML = '';
+    const groups = [
+        { label: "1. 懶人包 (50)", key: "infographics" },
+        { label: "2. 內容類型 (35)", key: "types" }, 
+        { label: "3. 角色 (50) <span class='text-indigo-500'>✦影音強化</span>", key: "roles", isMulti: true },
+        { label: "4. 邏輯架構 (25)", key: "structures" }, 
+        { label: "5. 風格 (50)", key: "visual_styles" },
+        { label: "6. 語氣 (40)", key: "tones" }, 
+        { label: "7. 受眾 (40)", key: "audiences" }, 
+        { label: "8. 限定輸出格式 (20)", key: "formats" }, 
+        { label: "9. 文字數量限制 (15)", key: "wordCounts" },
+        { label: "10. 配色 (40)", key: "colors", isColor: true },
+        { label: "11. 備註 (60)", key: "notes", isMulti: true }
+    ];
+
+    groups.forEach((group, index) => {
+        const groupWrapper = document.createElement('div');
+        groupWrapper.className = 'mb-1 border border-slate-100 rounded-md overflow-hidden bg-white';
+        const colorClass = `label-clr-${(index + 2) % 5}`;
+        const header = document.createElement('button');
+        header.className = `w-full flex items-center justify-between p-2 text-[10px] font-black uppercase tracking-tight ${colorClass} transition-all hover:brightness-95`;
+        const isOpened = openGroups.has(group.key);
+        header.innerHTML = `<span>${group.label} ${group.isMulti ? '<span class="ml-1 opacity-60">(複選)</span>' : ''}</span><i data-lucide="chevron-down" class="w-3 h-3 chevron-icon ${isOpened ? 'rotate-180' : ''}"></i>`;
+
+        const content = document.createElement('div');
+        content.className = `dropdown-content z-50 ${isOpened ? 'show' : ''}`;
+
+        const grid = document.createElement('div');
+        grid.className = 'grid grid-cols-2 sm:grid-cols-4 lg:grid-cols-5 gap-1 p-1 bg-white relative';
+
+        INITIAL_CONFIG[group.key].forEach((opt, btnIdx) => {
+            const btn = document.createElement('button');
+            const isActive = group.isMulti ? (selections[group.key] || []).some(n => n.id === opt.id) : (selections[group.key.replace(/s$/, '')] || {}).id === opt.id;
+            const btnColorClass = `btn-clr-${btnIdx % 4}`;
+            
+            btn.className = `selection-btn mx-auto w-[92%] rounded border border-slate-200 text-[11px] p-[0.2rem] break-words whitespace-normal transition-all ${isActive ? 'active' : btnColorClass + ' hover:border-slate-400'}`;
+            btn.innerHTML = `<span class="w-full text-center leading-tight">${opt.label}</span>`;
+            
+            if (group.isColor && opt.swatches) {
+                const sw = document.createElement('div');
+                sw.className = 'flex gap-0.5 justify-center mt-0.5 w-full';
+                opt.swatches.forEach(c => { 
+                    const d = document.createElement('div'); 
+                    d.className = 'w-1.5 h-1 border border-black/5 rounded-full'; 
+                    d.style.backgroundColor = c; 
+                    sw.appendChild(d);
+                });
+                btn.appendChild(sw);
+            }
+
+            btn.onclick = (e) => {
+                e.stopPropagation();
+                if (group.isMulti) {
+                    if (!selections[group.key]) selections[group.key] = [];
+                    const idx = selections[group.key].findIndex(n => n.id === opt.id);
+                    if (idx > -1) selections[group.key].splice(idx, 1); else selections[group.key].push(opt);
+                } else {
+                    const key = group.key.replace(/s$/, '');
+                    selections[key] = selections[key]?.id === opt.id ? null : opt;
+                }
+                renderSelections(); buildPrompt(); saveToFirebase();
+            };
+            grid.appendChild(btn);
+        });
+        
+        header.onclick = () => {
+            if (openGroups.has(group.key)) openGroups.delete(group.key); else openGroups.add(group.key);
+            renderSelections();
+        };
+        content.appendChild(grid);
+        groupWrapper.appendChild(header);
+        groupWrapper.appendChild(content);
+        selectionGroupsContainer.appendChild(groupWrapper);
+    });
+    lucide.createIcons();
+};
+
+const saveToFirebase = async () => {
+    if (!user) return;
+    const docRef = doc(db, 'artifacts', appId, 'users', user.uid, 'settings', 'config');
+    await setDoc(docRef, { selections, title, customNotes }, { merge: true });
+};
+
+titleInput.oninput = (e) => { title = e.target.value; buildPrompt(); saveToFirebase(); };
+customNotesInput.oninput = (e) => { customNotes = e.target.value; buildPrompt(); saveToFirebase(); };
+
+copyBtn.onclick = () => {
+    const text = promptOutput.textContent;
+    if (!text) return;
+    const textArea = document.createElement("textarea");
+    textArea.value = text;
+    textArea.style.position = "fixed";
+    document.body.appendChild(textArea);
+    textArea.focus();
+    textArea.select();
+    try { 
+        document.execCommand('copy'); 
+        copyBtn.innerText = 'COPIED'; 
+        copyBtn.classList.replace('bg-indigo-600', 'bg-green-600');
+        setTimeout(() => { 
+            copyBtn.innerText = 'COPY'; 
+            copyBtn.classList.replace('bg-green-600', 'bg-indigo-600'); 
+        }, 2000); 
+    } catch (err) { console.error('複製失敗', err); }
+    document.body.removeChild(textArea);
+};
+
+document.getElementById('reset-all-btn').onclick = () => { if(confirm('確定要全部清除嗎？這會重新整理頁面。')) location.reload(); };
+document.getElementById('clear-selections-btn').onclick = () => {
+    selections = { roles: [], infographic: null, type: null, structure: null, format: null, wordCount: null, visual_style: null, tone: null, audience: null, color: null, notes: [] };
+    renderSelections(); buildPrompt(); saveToFirebase();
+};
+
+const init = async () => {
+    await signInAnonymously(auth);
+    onAuthStateChanged(auth, async (u) => {
+        user = u; if (!user) return;
+        const docRef = doc(db, 'artifacts', appId, 'users', user.uid, 'settings', 'config');
+        const snap = await getDoc(docRef);
+        if (snap.exists()) {
+            const data = snap.data();
+            if (data.selections) selections = data.selections;
+            if (data.title) { title = data.title; titleInput.value = title; }
+            if (data.customNotes) { customNotes = data.customNotes; customNotesInput.value = customNotes; }
+        }
+        renderSelections(); buildPrompt();
+    });
+};
+init();
+
+const resizer = document.getElementById('resizer');
+const leftPanel = document.getElementById('left-panel');
+let isResizing = false;
+resizer.onmousedown = () => { isResizing = true; document.body.style.cursor = 'col-resize'; };
+document.onmousemove = (e) => { if (!isResizing) return; let newWidth = (e.clientX / window.innerWidth) * 100; if (newWidth >= 20 && newWidth <= 85) leftPanel.style.flexBasis = `${newWidth}%`; };
+document.onmouseup = () => { isResizing = false; document.body.style.cursor = 'default'; };
+</script>
+</body>
+</html>
